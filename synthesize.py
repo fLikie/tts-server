@@ -4,12 +4,21 @@ import torch
 import soundfile as sf
 
 device = torch.device("cpu")
-model = torch.hub.load(
+
+result = torch.hub.load(
     repo_or_dir='snakers4/silero-models',
     model='silero_tts',
     language='ru',
-    speaker='v3_1_ru'
+    speaker='v3_1_ru',
+    device=device
 )
+
+# Распаковка: если кортеж — берём первый элемент
+if isinstance(result, tuple):
+    model = result[0]
+else:
+    model = result
+
 if "--list" in sys.argv:
     print("\n".join(model.speakers))
     exit(0)
