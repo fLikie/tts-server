@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 	"log"
 	"net/http"
@@ -11,22 +12,31 @@ import (
 )
 
 func speakHandler(w http.ResponseWriter, r *http.Request) {
-	text := r.URL.Query().Get("text")
-	voice := r.URL.Query().Get("voice")
+	if r.Method != http.MethodPost {
+		http.Error(w, "Only POST allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
-	if text == "" {
-		http.Error(w, "Missing 'text' param", http.StatusBadRequest)
+	type RequestBody struct {
+		Text  string `json:"text"`
+		Voice string `json:"voice,omitempty"`
+	}
+
+	var req RequestBody
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil || req.Text == "" {
+		http.Error(w, "Invalid JSON or missing 'text'", http.StatusBadRequest)
 		return
 	}
 
 	args := []string{"synthesize.py"}
-	if voice != "" {
-		args = append(args, "--voice", voice)
+	if req.Voice != "" {
+		args = append(args, "--voice", req.Voice)
 	}
-	args = append(args, strings.Fields(text)...)
+	args = append(args, strings.Fields(req.Text)...)
 
 	cmd := exec.Command("python3", args...)
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil {
 		log.Println("Python error:", err)
 		http.Error(w, "Failed to synthesize", http.StatusInternalServerError)
