@@ -43,14 +43,22 @@ func speakHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	f, err := os.Open("output.wav")
+	// Конвертация .wav → .mp3
+	err = exec.Command("ffmpeg", "-y", "-i", "output.wav", "output.mp3").Run()
 	if err != nil {
-		http.Error(w, "Cannot open output", http.StatusInternalServerError)
+		log.Println("FFmpeg error:", err)
+		http.Error(w, "Failed to convert to mp3", http.StatusInternalServerError)
+		return
+	}
+
+	f, err := os.Open("output.mp3")
+	if err != nil {
+		http.Error(w, "Cannot open mp3 output", http.StatusInternalServerError)
 		return
 	}
 	defer f.Close()
 
-	w.Header().Set("Content-Type", "audio/wav")
+	w.Header().Set("Content-Type", "audio/mpeg")
 	io.Copy(w, f)
 }
 
