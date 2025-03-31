@@ -2,14 +2,14 @@
 import sys
 import torch
 import soundfile as sf
-from silero import models
 
 device = torch.device("cpu")
-model, _ = models.get_tts_model(
-    model_name='v3_1_ru',
-    device=device
+model = torch.hub.load(
+    repo_or_dir='snakers4/silero-models',
+    model='silero_tts',
+    language='ru',
+    speaker='v3_1_ru'
 )
-
 if "--list" in sys.argv:
     print("\n".join(model.speakers))
     exit(0)
