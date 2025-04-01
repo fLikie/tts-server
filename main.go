@@ -11,15 +11,16 @@ import (
 	"strings"
 )
 
+type RequestBody struct {
+	Text   string `json:"text"`
+	Voice  string `json:"voice,omitempty"`
+	Engine string `json:"engine,omitempty"` // silero (default) or piper
+}
+
 func speakHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Only POST allowed", http.StatusMethodNotAllowed)
 		return
-	}
-
-	type RequestBody struct {
-		Text  string `json:"text"`
-		Voice string `json:"voice,omitempty"`
 	}
 
 	var req RequestBody
@@ -29,13 +30,19 @@ func speakHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	args := []string{"synthesize.py"}
-	if req.Voice != "" {
+	script := "synthesize.py"
+	if req.Engine == "piper" {
+		script = "synthesize_piper.py"
+	}
+
+	args := []string{script}
+	if req.Voice != "" && req.Engine != "piper" {
 		args = append(args, "--voice", req.Voice)
 	}
 	args = append(args, strings.Fields(req.Text)...)
 
 	cmd := exec.Command("python3", args...)
+
 	err = cmd.Run()
 	if err != nil {
 		log.Println("Python error:", err)

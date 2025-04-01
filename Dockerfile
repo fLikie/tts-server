@@ -1,17 +1,30 @@
 FROM python:3.10-slim
 
-# Установим ffmpeg + golang + git
+# Установка зависимостей
 RUN apt-get update && apt-get install -y \
+    build-essential \
+    python3 \
+    python3-pip \
+    git \
     ffmpeg \
+    libespeak-ng1 \
     golang \
-    git && \
-    pip install torch soundfile git+https://github.com/snakers4/silero-models
+    curl \
+    wget \
+ && pip3 install torch soundfile git+https://github.com/snakers4/silero-models
 
-# Копируем проект
+# Скачиваем и компилируем Piper
+RUN git clone https://github.com/rhasspy/piper.git && \
+    cd piper && make
+
+# Скачиваем модель ru_irina
+RUN mkdir -p piper/models/ru && cd piper/models/ru && \
+    wget https://huggingface.co/rhasspy/piper-voices/resolve/main/ru/irina-medium.onnx && \
+    wget https://huggingface.co/rhasspy/piper-voices/resolve/main/ru/irina-medium.onnx.json
+
 WORKDIR /app
 COPY . .
 
-# Собираем Go-приложение
 RUN go build -o server main.go
 
 COPY entrypoint.sh /entrypoint.sh
