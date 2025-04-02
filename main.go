@@ -43,9 +43,10 @@ func speakHandler(w http.ResponseWriter, r *http.Request) {
 
 	cmd := exec.Command("python3", args...)
 
-	err = cmd.Run()
+	out, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Println("Python error:", err)
+		log.Println("Python output:", string(out)) // <--- вот это важно
 		http.Error(w, "Failed to synthesize", http.StatusInternalServerError)
 		return
 	}
