@@ -3,6 +3,7 @@ FROM python:3.10-slim
 # Установка зависимостей
 RUN apt-get update && apt-get install -y \
     build-essential \
+    cmake \
     python3 \
     python3-pip \
     git \
