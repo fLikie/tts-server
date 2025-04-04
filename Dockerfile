@@ -1,6 +1,10 @@
 # Dockerfile для TTS-сервера с Silero и Piper (через Python)
 FROM ubuntu:22.04
 
+RUN echo 'Acquire::AllowInsecureRepositories "true";' > /etc/apt/apt.conf.d/99insecure && \
+    echo 'Acquire::AllowDowngradeToInsecureRepositories "true";' >> /etc/apt/apt.conf.d/99insecure && \
+    echo 'APT::Get::AllowUnauthenticated "true";' >> /etc/apt/apt.conf.d/99insecure
+
 # Установка системных зависимостей и Python
 RUN apt-get update && apt-get install -y \
     python3 \
