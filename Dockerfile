@@ -52,10 +52,10 @@ RUN pip3 install --no-cache-dir \
     soundfile \
     git+https://github.com/snakers4/silero-models
 
-# Установка piper (tts и phonemize из общего репозитория)
-RUN git clone https://github.com/rhasspy/piper.git && \
-    cd piper/src/python && \
-    pip3 install .
+# Клонируем Piper и устанавливаем Python-модуль
+RUN git clone https://github.com/rhasspy/piper.git /opt/piper
+WORKDIR /opt/piper/src/python
+RUN pip3 install .
 
 # Создаём рабочую директорию
 WORKDIR /app
