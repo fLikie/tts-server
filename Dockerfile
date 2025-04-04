@@ -2,14 +2,16 @@ FROM python:3.10-slim
 
 # Устанавливаем зависимости
 RUN apt-get update && apt-get install -y \
+  build-essential \
+  cmake \
   ffmpeg \
   libespeak-ng1 \
+  libespeak-ng-dev \
   libsndfile1 \
   git \
   curl \
   wget \
   && apt-get clean
-
 # Устанавливаем Python-зависимости
 # Устанавливаем Python-библиотеки
 RUN pip install torch==2.1.0+cpu -f https://download.pytorch.org/whl/torch_stable.html \
