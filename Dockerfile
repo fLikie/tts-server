@@ -1,4 +1,5 @@
 # Dockerfile для TTS-сервера с Silero и Piper (через Python)
+
 FROM ubuntu:22.04
 
 # Отключаем GPG-подписи (если надо)
@@ -12,8 +13,6 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     cmake \
     ffmpeg \
-    libespeak-ng1 \
-    libespeak-ng-dev \
     libsndfile1 \
     python3-dev \
     pybind11-dev \
@@ -21,7 +20,19 @@ RUN apt-get update && apt-get install -y \
     curl \
     wget \
     ca-certificates \
+    libtool \
+    autoconf \
+    automake \
+    pkg-config \
     && apt-get clean
+
+# Сборка и установка свежего espeak-ng
+RUN git clone https://github.com/espeak-ng/espeak-ng.git && \
+    cd espeak-ng && \
+    ./autogen.sh && \
+    ./configure --prefix=/usr && \
+    make -j$(nproc) && \
+    make install
 
 # Установка ONNX Runtime SDK вручную
 RUN curl -L -o onnxruntime.tgz https://github.com/microsoft/onnxruntime/releases/download/v1.16.3/onnxruntime-linux-x64-1.16.3.tgz && \
