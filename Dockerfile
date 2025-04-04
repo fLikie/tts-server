@@ -2,17 +2,17 @@ FROM python:3.10-slim
 
 # Устанавливаем зависимости
 RUN apt-get update && apt-get install -y \
-    ffmpeg \
-    libespeak-ng1 \
-    git \
-    curl \
-    wget \
-    && apt-get clean
+  ffmpeg \
+  libespeak-ng1 \
+  libsndfile1 \
+  git \
+  curl \
+  wget \
+  && apt-get clean
 
 # Устанавливаем Python-зависимости
 # Устанавливаем Python-библиотеки
-RUN pip install --no-cache-dir \
-    torch \
+RUN pip install torch==2.1.0+cpu -f https://download.pytorch.org/whl/torch_stable.html \
     soundfile \
     git+https://github.com/snakers4/silero-models
 
