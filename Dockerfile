@@ -57,8 +57,8 @@ RUN git clone --branch v1.1.0 https://github.com/rhasspy/piper-phonemize.git && 
     cd piper-phonemize && \
     pip3 install .
 
-RUN git clone --branch v1.2.0 https://github.com/rhasspy/piper-tts.git && \
-    cd piper-tts && \
+RUN git clone https://github.com/rhasspy/piper.git && \
+    cd piper/src/python && \
     pip3 install .
 
 # Создаём рабочую директорию
