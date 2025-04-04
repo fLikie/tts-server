@@ -1,30 +1,34 @@
+# Dockerfile для TTS-сервера с Silero и Piper (через Python)
 FROM python:3.10-slim
 
-RUN apt-get update || true && apt-get install -y --allow-unauthenticated \
-    gnupg ca-certificates
-
+# Обновляем ключи и отключаем проверку GPG-подписей (временно)
 RUN mkdir -p /etc/apt/keyrings && \
-    curl -fsSL https://ftp-master.debian.org/keys/release-12.asc | gpg --dearmor -o /etc/apt/keyrings/debian-archive.gpg
+    apt-get update || true && \
+    apt-get install -y --allow-unauthenticated \
+    gnupg \
+    ca-certificates \
+    && curl -fsSL https://ftp-master.debian.org/keys/release-12.asc | gpg --dearmor -o /etc/apt/keyrings/debian-archive.gpg
 
-# Устанавливаем зависимости
+# Устанавливаем системные зависимости
 RUN apt-get update && apt-get install -y \
-  build-essential \
-  cmake \
-  ffmpeg \
-  libespeak-ng1 \
-  libespeak-ng-dev \
-  libsndfile1 \
-  git \
-  curl \
-  wget \
-  && apt-get clean
-# Устанавливаем Python-зависимости
+    build-essential \
+    cmake \
+    ffmpeg \
+    libespeak-ng1 \
+    libespeak-ng-dev \
+    libsndfile1 \
+    git \
+    curl \
+    wget \
+    && apt-get clean
+
 # Устанавливаем Python-библиотеки
-RUN pip install torch==2.1.0+cpu -f https://download.pytorch.org/whl/torch_stable.html \
+RUN pip install --no-cache-dir \
+    torch==2.1.0+cpu -f https://download.pytorch.org/whl/torch_stable.html \
     soundfile \
     git+https://github.com/snakers4/silero-models
 
-# Установка Piper из GitHub вручную
+# Установка piper-phonemize и piper-tts из исходников
 RUN git clone --branch v1.1.0 https://github.com/rhasspy/piper-phonemize.git && \
     cd piper-phonemize && \
     pip install .
