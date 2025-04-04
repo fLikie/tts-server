@@ -1,5 +1,11 @@
 FROM python:3.10-slim
 
+RUN apt-get update || true && apt-get install -y --allow-unauthenticated \
+    gnupg ca-certificates
+
+RUN mkdir -p /etc/apt/keyrings && \
+    curl -fsSL https://ftp-master.debian.org/keys/release-12.asc | gpg --dearmor -o /etc/apt/keyrings/debian-archive.gpg
+
 # Устанавливаем зависимости
 RUN apt-get update && apt-get install -y \
   build-essential \
