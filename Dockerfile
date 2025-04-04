@@ -19,8 +19,8 @@ RUN git clone https://github.com/rhasspy/piper.git && \
 
 # Скачиваем модель ru_irina
 RUN mkdir -p piper/models/ru && cd piper/models/ru && \
-    wget https://huggingface.co/rhasspy/piper-voices/tree/main/ru/ru_RU/irina/medium/irina-medium.onnx && \
-    wget https://huggingface.co/rhasspy/piper-voices/tree/main/ru/ru_RU/irina/medium/irina-medium.onnx.json
+    wget https://huggingface.co/rhasspy/piper-voices/tree/main/ru/ru_RU/irina/medium/ru_RU-irina-medium.onnx && \
+    wget https://huggingface.co/rhasspy/piper-voices/tree/main/ru/ru_RU/irina/medium/ru_RU-irina-medium.onnx.json
 
 WORKDIR /app
 COPY . .
