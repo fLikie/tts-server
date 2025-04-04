@@ -46,12 +46,6 @@ ENV CPLUS_INCLUDE_PATH=$ONNXRUNTIME_DIR/include
 ENV LIBRARY_PATH=$ONNXRUNTIME_DIR/lib
 ENV LD_LIBRARY_PATH=$ONNXRUNTIME_DIR/lib
 
-# Установка Python-библиотек
-RUN pip3 install --no-cache-dir \
-    torch==2.1.0+cpu -f https://download.pytorch.org/whl/torch_stable.html \
-    soundfile \
-    git+https://github.com/snakers4/silero-models
-
 # Клонируем Piper и устанавливаем Python-модуль
 RUN git clone https://github.com/rhasspy/piper.git /opt/piper
 WORKDIR /opt/piper/src/python
@@ -59,6 +53,12 @@ RUN pip3 install .
 
 # Создаём рабочую директорию
 WORKDIR /app
+
+# Установка Python-библиотек
+RUN pip3 install --no-cache-dir \
+    torch==2.1.0+cpu -f https://download.pytorch.org/whl/torch_stable.html \
+    soundfile \
+    git+https://github.com/snakers4/silero-models
 
 # Копируем файлы проекта
 COPY . .
