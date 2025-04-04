@@ -1,5 +1,5 @@
 # Dockerfile для TTS-сервера с Silero и Piper (через Python)
-FROM debian:bullseye
+FROM ubuntu:22.04
 
 # Установка системных зависимостей и Python
 RUN apt-get update && apt-get install -y \
