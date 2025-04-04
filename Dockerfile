@@ -9,6 +9,7 @@ RUN echo 'Acquire::AllowInsecureRepositories "true";' > /etc/apt/apt.conf.d/99in
 RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
+    libonnxruntime-dev \
     build-essential \
     cmake \
     ffmpeg \
