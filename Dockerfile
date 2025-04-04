@@ -1,16 +1,10 @@
 # Dockerfile для TTS-сервера с Silero и Piper (через Python)
-FROM python:3.10-slim
+FROM debian:bullseye
 
-# Обновляем ключи и отключаем проверку GPG-подписей (временно)
-RUN mkdir -p /etc/apt/keyrings && \
-    apt-get update || true && \
-    apt-get install -y --allow-unauthenticated \
-    gnupg \
-    ca-certificates \
-    && curl -fsSL https://ftp-master.debian.org/keys/release-12.asc | gpg --dearmor -o /etc/apt/keyrings/debian-archive.gpg
-
-# Устанавливаем системные зависимости
+# Установка системных зависимостей и Python
 RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
     build-essential \
     cmake \
     ffmpeg \
@@ -20,10 +14,11 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     wget \
+    ca-certificates \
     && apt-get clean
 
 # Устанавливаем Python-библиотеки
-RUN pip install --no-cache-dir \
+RUN pip3 install --no-cache-dir \
     torch==2.1.0+cpu -f https://download.pytorch.org/whl/torch_stable.html \
     soundfile \
     git+https://github.com/snakers4/silero-models
@@ -31,11 +26,11 @@ RUN pip install --no-cache-dir \
 # Установка piper-phonemize и piper-tts из исходников
 RUN git clone --branch v1.1.0 https://github.com/rhasspy/piper-phonemize.git && \
     cd piper-phonemize && \
-    pip install .
+    pip3 install .
 
 RUN git clone --branch v1.2.0 https://github.com/rhasspy/piper-tts.git && \
     cd piper-tts && \
-    pip install .
+    pip3 install .
 
 # Создаём рабочую директорию
 WORKDIR /app
@@ -44,7 +39,8 @@ WORKDIR /app
 COPY . .
 
 # Сборка Go-приложения
-RUN go build -o server main.go
+RUN apt-get install -y golang && \
+    go build -o server main.go
 
 # Устанавливаем точку входа
 COPY entrypoint.sh /entrypoint.sh
