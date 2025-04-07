@@ -1,77 +1,42 @@
-# Dockerfile для TTS-сервера с Silero и Piper (через Python)
+# Dockerfile: Чистый TTS-сервер на Go с Piper CLI (без Python)
 
 FROM ubuntu:22.04
 
-# Отключаем GPG-подписи (если надо)
-RUN echo 'Acquire::AllowInsecureRepositories "true";' > /etc/apt/apt.conf.d/99insecure && \
-    echo 'APT::Get::AllowUnauthenticated "true";' >> /etc/apt/apt.conf.d/99insecure
-
-# Установка системных зависимостей
+# Установка зависимостей
 RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
     build-essential \
     cmake \
-    ffmpeg \
-    libsndfile1 \
-    python3-dev \
-    pybind11-dev \
     git \
     curl \
     wget \
-    ca-certificates \
-    libtool \
-    autoconf \
-    automake \
-    pkg-config \
+    ffmpeg \
+    libsndfile1 \
+    golang \
     && apt-get clean
 
-# Сборка и установка свежего espeak-ng
-RUN git clone https://github.com/espeak-ng/espeak-ng.git && \
-    cd espeak-ng && \
-    ./autogen.sh && \
-    ./configure --prefix=/usr && \
-    make -j$(nproc) && \
-    make install
-
-# Установка ONNX Runtime SDK вручную
-RUN curl -L -o onnxruntime.tgz https://github.com/microsoft/onnxruntime/releases/download/v1.16.3/onnxruntime-linux-x64-1.16.3.tgz && \
-    tar -xzf onnxruntime.tgz && \
-    mv onnxruntime-linux-x64-1.16.3 /opt/onnxruntime && \
-    rm onnxruntime.tgz
-
-# Установка переменных окружения для сборки
-ENV ONNXRUNTIME_DIR=/opt/onnxruntime
-ENV CPLUS_INCLUDE_PATH=$ONNXRUNTIME_DIR/include
-ENV LIBRARY_PATH=$ONNXRUNTIME_DIR/lib
-ENV LD_LIBRARY_PATH=$ONNXRUNTIME_DIR/lib
-
-# Клонируем Piper
+# Сборка Piper
 RUN git clone https://github.com/rhasspy/piper.git /opt/piper
+WORKDIR /opt/piper
+RUN make
 
-# Создаём рабочую директорию
+# Скачивание русской модели
+RUN mkdir -p /opt/piper/models/ru && \
+    wget https://huggingface.co/rhasspy/piper-voices/blob/main/ru/ru_RU/irina/medium/ru_RU-irina-medium.onnx -O /opt/piper/models/ru/irina.onnx && \
+    wget https://huggingface.co/rhasspy/piper-voices/blob/main/ru/ru_RU/irina/medium/ru_RU-irina-medium.onnx.json -O /opt/piper/models/ru/irina.onnx.json
+
+# Создание рабочей директории и копирование проекта
 WORKDIR /app
-
-# Установка Python-библиотек
-RUN pip3 install --no-cache-dir \
-    torch==2.1.0+cpu -f https://download.pytorch.org/whl/torch_stable.html \
-    soundfile \
-    git+https://github.com/snakers4/silero-models
-
-# Установка piper_tts после зависимостей
-WORKDIR /opt/piper/src/python
-RUN pip3 install .
-
-# Копируем файлы проекта
 COPY . .
 
-# Сборка Go-приложения
-RUN apt-get install -y golang && \
-    go build -o server main.go
+# Сборка Go-сервера
+RUN go build -o server main.go
 
-# Устанавливаем точку входа
+# Копируем точку входа
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+
+ENV PIPER_BIN=/opt/piper/piper
+ENV PIPER_MODEL=/opt/piper/models/ru/irina.onnx
 
 EXPOSE 8080
 

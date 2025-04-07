@@ -1,5 +1,5 @@
 import sys
-from piper_tts import PiperVoice
+from piper.voice import PiperVoice
 
 text = " ".join(arg for arg in sys.argv[1:] if not arg.startswith("--"))
 

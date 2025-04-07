@@ -1,94 +1,68 @@
+// main.go
 package main
 
 import (
 	"bytes"
-	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"os/exec"
-	"strings"
+	"time"
 )
 
-type RequestBody struct {
-	Text   string `json:"text"`
-	Voice  string `json:"voice,omitempty"`
-	Engine string `json:"engine,omitempty"` // silero (default) or piper
+func main() {
+	http.HandleFunc("/speak", handleSpeak)
+	log.Println("Listening on :8080")
+	http.ListenAndServe(":8080", nil)
 }
 
-func speakHandler(w http.ResponseWriter, r *http.Request) {
+func handleSpeak(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Only POST allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	var req RequestBody
-	err := json.NewDecoder(r.Body).Decode(&req)
-	if err != nil || req.Text == "" {
-		http.Error(w, "Invalid JSON or missing 'text'", http.StatusBadRequest)
+	text, err := io.ReadAll(r.Body)
+	if err != nil || len(text) == 0 {
+		http.Error(w, "Empty body", http.StatusBadRequest)
 		return
 	}
 
-	script := "synthesize.py"
-	if req.Engine == "piper" {
-		script = "synthesize_piper.py"
-	}
+	tempWav := fmt.Sprintf("/tmp/tts_%d.wav", time.Now().UnixNano())
+	tempMp3 := fmt.Sprintf("/tmp/tts_%d.mp3", time.Now().UnixNano())
+	defer os.Remove(tempWav)
+	defer os.Remove(tempMp3)
 
-	args := []string{script}
-	if req.Voice != "" && req.Engine != "piper" {
-		args = append(args, "--voice", req.Voice)
-	}
-	args = append(args, strings.Fields(req.Text)...)
-
-	cmd := exec.Command("python3", args...)
+	cmd := exec.Command("/opt/piper/piper",
+		"--model", os.Getenv("PIPER_MODEL"),
+		"--output_file", tempWav,
+	)
+	cmd.Stdin = bytes.NewReader(text)
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Println("Python error:", err)
-		log.Println("Python output:", string(out)) // <--- вот это важно
-		http.Error(w, "Failed to synthesize", http.StatusInternalServerError)
+		log.Printf("Piper error: %v\n%s", err, out)
+		http.Error(w, "Piper failed", 500)
 		return
 	}
 
-	// Конвертация .wav → .mp3
-	err = exec.Command("ffmpeg", "-y", "-i", "output.wav", "output.mp3").Run()
+	// Конвертация в mp3 через ffmpeg
+	cmd = exec.Command("ffmpeg", "-y", "-i", tempWav, "-codec:a", "libmp3lame", tempMp3)
+	out, err = cmd.CombinedOutput()
 	if err != nil {
-		log.Println("FFmpeg error:", err)
-		http.Error(w, "Failed to convert to mp3", http.StatusInternalServerError)
+		log.Printf("FFmpeg error: %v\n%s", err, out)
+		http.Error(w, "FFmpeg failed", 500)
 		return
 	}
 
-	f, err := os.Open("output.mp3")
+	audio, err := os.ReadFile(tempMp3)
 	if err != nil {
-		http.Error(w, "Cannot open mp3 output", http.StatusInternalServerError)
+		http.Error(w, "Failed to read mp3", 500)
 		return
 	}
-	defer f.Close()
 
 	w.Header().Set("Content-Type", "audio/mpeg")
-	io.Copy(w, f)
-}
-
-func voicesHandler(w http.ResponseWriter, r *http.Request) {
-	cmd := exec.Command("python3", "synthesize.py", "--list")
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err := cmd.Run()
-	if err != nil {
-		log.Println("Python error:", err)
-		http.Error(w, "Failed to get voices", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	voices := strings.Split(strings.TrimSpace(out.String()), "\n")
-	w.Write([]byte(`["` + strings.Join(voices, `","`) + `"]`))
-}
-
-func main() {
-	http.HandleFunc("/speak", speakHandler)
-	http.HandleFunc("/voices", voicesHandler)
-	log.Println("Listening on :8080")
-	http.ListenAndServe(":8080", nil)
+	w.Write(audio)
 }
