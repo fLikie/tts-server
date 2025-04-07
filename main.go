@@ -35,7 +35,7 @@ func handleSpeak(w http.ResponseWriter, r *http.Request) {
 	defer os.Remove(tempWav)
 	defer os.Remove(tempMp3)
 
-	cmd := exec.Command("/opt/piper/piper",
+	cmd := exec.Command("/opt/piper",
 		"--model", os.Getenv("PIPER_MODEL"),
 		"--output_file", tempWav,
 	)
