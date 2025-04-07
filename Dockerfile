@@ -16,7 +16,9 @@ RUN apt-get update && apt-get install -y \
 RUN mkdir -p /opt/piper && \
     wget https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_linux_x86_64.tar.gz -O /tmp/piper.tar.gz && \
     tar -xzf /tmp/piper.tar.gz -C /opt/piper && \
+    mv /opt/piper/piper_linux_x86_64/piper /opt/piper/piper && \
     chmod +x /opt/piper/piper && \
+    rm -rf /opt/piper/piper_linux_x86_64 && \
     rm /tmp/piper.tar.gz
 
 # Скачивание русской модели
