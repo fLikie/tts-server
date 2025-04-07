@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
 # Сборка Piper
 RUN git clone https://github.com/rhasspy/piper.git /opt/piper
 WORKDIR /opt/piper
-RUN make
+RUN make && ls -la /opt/piper && file /opt/piper/piper || echo "❌ piper не собрался"
 
 # Скачивание русской модели
 RUN mkdir -p /opt/piper/models/ru && \
