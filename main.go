@@ -48,21 +48,6 @@ func handleSpeak(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Конвертация в mp3 через ffmpeg
-	cmd = exec.Command("ffmpeg", "-y", "-i", tempWav, "-codec:a", "libmp3lame", tempMp3)
-	out, err = cmd.CombinedOutput()
-	if err != nil {
-		log.Printf("FFmpeg error: %v\n%s", err, out)
-		http.Error(w, "FFmpeg failed", 500)
-		return
-	}
-
-	audio, err := os.ReadFile(tempMp3)
-	if err != nil {
-		http.Error(w, "Failed to read mp3", 500)
-		return
-	}
-
 	w.Header().Set("Content-Type", "audio/mpeg")
-	w.Write(audio)
+	w.Write(out)
 }
