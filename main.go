@@ -31,9 +31,7 @@ func handleSpeak(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tempWav := fmt.Sprintf("/tmp/tts_%d.wav", time.Now().UnixNano())
-	tempMp3 := fmt.Sprintf("/tmp/tts_%d.mp3", time.Now().UnixNano())
 	defer os.Remove(tempWav)
-	defer os.Remove(tempMp3)
 
 	cmd := exec.Command("/opt/piper/piper/piper",
 		"--model", os.Getenv("PIPER_MODEL"),
@@ -48,6 +46,12 @@ func handleSpeak(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "audio/mpeg")
-	w.Write(out)
+	audio, err := os.ReadFile(tempWav)
+	if err != nil {
+		http.Error(w, "Failed to read WAV", 500)
+		return
+	}
+
+	w.Header().Set("Content-Type", "audio/wav")
+	w.Write(audio)
 }
