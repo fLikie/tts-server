@@ -35,7 +35,7 @@ RUN go build -o server main.go
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-ENV PIPER_BIN=/opt/piper/piper
+ENV ENV PIPER_BIN=/opt/piper/piper/piper
 ENV PIPER_MODEL=/opt/piper/models/ru/irina.onnx
 
 EXPOSE 8080
