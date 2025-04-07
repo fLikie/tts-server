@@ -21,8 +21,8 @@ RUN mkdir -p /opt/piper && \
 
 # Скачивание русской модели
 RUN mkdir -p /opt/piper/models/ru && \
-    wget https://huggingface.co/rhasspy/piper-voices/blob/main/ru/ru_RU/irina/medium/ru_RU-irina-medium.onnx -O /opt/piper/models/ru/irina.onnx && \
-    wget https://huggingface.co/rhasspy/piper-voices/blob/main/ru/ru_RU/irina/medium/ru_RU-irina-medium.onnx.json -O /opt/piper/models/ru/irina.onnx.json
+    wget https://huggingface.co/rhasspy/piper-voices/resolve/main/ru/ru_RU/irina/medium/ru_RU-irina-medium.onnx -O /opt/piper/models/ru/irina.onnx && \
+    wget https://huggingface.co/rhasspy/piper-voices/resolve/main/ru/ru_RU/irina/medium/ru_RU-irina-medium.onnx.json -O /opt/piper/models/ru/irina.onnx.json
 
 # Создание рабочей директории и копирование проекта
 WORKDIR /app
